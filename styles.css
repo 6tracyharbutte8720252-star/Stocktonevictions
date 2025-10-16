@@ -1,0 +1,1436 @@
+./styles.css < !doctype html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Image OCR Upload Demo</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"><style>:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --accent: #b80606;
+  --muted: #556072;
+  --success: #0b9a5a;
+  --warn: #e6a800;
+  --danger: #c62828;
+  --radius: 12px;
+  --shadow: 0 8px 30px rgba(11, 18, 30, .06);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+}
+
+* {
+  box-sizing: border-box
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #0b1220;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.wrapper {
+  max-width: 980px;
+  margin: 0 auto
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  overflow: hidden;
+}
+
+/* layout */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 18px
+}
+
+@media (max-width:880px) {
+  .grid {
+    grid-template-columns: 1fr
+  }
+}
+
+/* controls */
+.label {
+  display: block;
+  font-weight: 600;
+  margin: 8px 0;
+  color: #1f2937
+}
+
+.input,
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6eef8;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 14px;
+}
+
+.input:focus,
+input[type="file"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px rgba(184, 6, 6, 0.07)
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent) 0%, #910404 100%);
+}
+
+.button.secondary {
+  background: #334155
+}
+
+.button.ghost {
+  background: transparent;
+  border: 1px dashed #e6eef8;
+  color: var(--accent)
+}
+
+/* preview + mapped fields */
+.preview {
+  border: 1px dashed #e6eef8;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff, #fcfcff);
+  min-height: 140px;
+}
+
+.preview h4 {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #334155
+}
+
+.field {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f4f7fb
+}
+
+.field:last-child {
+  border-bottom: 0
+}
+
+.field .k {
+  color: #334155;
+  font-weight: 700
+}
+
+.field .v {
+  color: #0b1220;
+  max-width: 70%;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap
+}
+
+/* thumbnails */
+.thumb-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px
+}
+
+.thumb {
+  width: 84px;
+  height: 84px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e8eef8;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center
+}
+
+.thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover
+}
+
+/* output & log */
+.out,
+.log {
+  background: #0b12201a;
+  color: #0b1220;
+  padding: 10px;
+  border-radius: 10px;
+  font-family: var(--mono);
+  max-height: 160px;
+  overflow: auto;
+  border: 1px solid #eef2f7
+}
+
+.note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px
+}
+
+.small {
+  font-size: 13px;
+  color: var(--muted)
+}
+
+/* utility */
+.center {
+  text-align: center
+}
+
+.hidden {
+  display: none
+}
+
+</style></head><body><div class="wrapper"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="margin:0;color:var(--accent);font-size:18px">Image OCR Upload Demo</h2><div class="small">Source: Google Lens / Camera</div></div><div class="grid"><main><label class="label">Upload image (Google Lens / Camera)</label><input id="imgInput" class="input" type="file" accept="image/*" /><div id="thumbs" class="thumb-grid" aria-hidden="true"></div><label class="label" style="margin-top:12px">Encryption passphrase (optional)</label><input id="passphrase" class="input" type="password" placeholder="Type a passphrase to encrypt results locally" /><div class="row" style="margin-top:12px"><button id="uploadBtn" class="button">Upload & Process</button><button id="encryptBtn" class="button secondary">Encrypt Locally</button><button id="clearBtn" class="button ghost">Clear</button></div><div class="note">This demo sends a Base64 image to /process-image. Replace with HTTPS server and KMS in production.</div><div style="margin-top:12px"><label class="label">Raw response</label><pre id="out" class="out">No output yet</pre></div></main><aside><div class="preview" id="preview"><h4>Mapped Fields</h4><div class="field"><div class="k">Tenant</div><div class="v" id="mf-tenant">—</div></div><div class="field"><div class="k">Property</div><div class="v" id="mf-address">—</div></div><div class="field"><div class="k">Claim</div><div class="v" id="mf-claim">—</div></div><div style="margin-top:10px" class="small">Confidence: <span id="mf-confidence">n/a</span></div></div><div style="margin-top:12px" class="log" id="log">No activity yet</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><div class="small">Status: <strong id="procStatus">idle</strong></div><div><button id="downloadEnc" class="button ghost">Download Encrypted</button></div></div></aside></div></div></div><script>
+
+/* Minimal client upload logic (unchanged behavior from your snippet) */
+async function toBase64(file) {
+  return await new Promise(r=> {
+      const fr=new FileReader(); fr.onload=()=>r(fr.result.split(',')[1]); fr.readAsDataURL(file);
+    });
+}
+
+function log(msg) {
+  const el=document.getElementById('log');
+  const ts=new Date().toLocaleTimeString();
+
+  el.innerText=`[$ {
+    ts
+  }
+
+  ] $ {
+    msg
+  }
+
+  \n`+el.innerText;
+}
+
+function showThumb(file) {
+  const thumbs=document.getElementById('thumbs');
+  thumbs.innerHTML='';
+  const url=URL.createObjectURL(file);
+  const d=document.createElement('div');
+  d.className='thumb';
+  const img=document.createElement('img');
+  img.src=url;
+  d.appendChild(img);
+  thumbs.appendChild(d);
+  thumbs.setAttribute('aria-hidden', 'false');
+}
+
+document.getElementById('imgInput').addEventListener('change', (e)=> {
+    const f=e.target.files && e.target.files[0];
+
+    if(f) {
+      showThumb(f); log('Image selected: ' + f.name);
+    }
+  });
+
+document.getElementById('uploadBtn').addEventListener('click', async ()=> {
+    const f=document.getElementById('imgInput').files[0];
+
+    if( !f) {
+      alert('Select an image'); return;
+    }
+
+    document.getElementById('procStatus').innerText='processing';
+    log('Starting upload for ' + f.name);
+
+    try {
+      const b64=await toBase64(f);
+
+      const resp=await fetch('/process-image', {
+
+        method:'POST',
+        headers: {
+          'Content-Type':'application/json'
+        }
+
+        ,
+        body: JSON.stringify({
+          filename: f.name, imageBase64: b64, userMeta: {
+            source: 'google-lens'
+          }
+        })
+    });
+  const data=await resp.json();
+  document.getElementById('out').innerText=JSON.stringify(data, null, 2);
+
+  if(data && data.mappedForm) {
+    document.getElementById('mf-tenant').innerText=data.mappedForm.tenantName || '—';
+    document.getElementById('mf-address').innerText=data.mappedForm.propertyAddress || '—';
+    document.getElementById('mf-claim').innerText=data.mappedForm.claimAmount || '—';
+    document.getElementById('mf-confidence').innerText=(data.mappedForm.confidence || 'unknown');
+  }
+
+  log('Processing completed, id=' + (data && data.id ? data.id : 'n/a'));
+  document.getElementById('procStatus').innerText='done';
+}
+
+catch(err) {
+  console.error(err);
+  log('Upload failed: ' + (err.message||err));
+  document.getElementById('procStatus').innerText='error';
+}
+});
+
+document.getElementById('encryptBtn').addEventListener('click', async ()=> {
+    const out=document.getElementById('out').innerText;
+
+    if( !out || out==='No output yet') {
+      alert('No data to encrypt'); return;
+    }
+
+    const pass=document.getElementById('passphrase').value;
+
+    if( !pass) {
+      if( !confirm('No passphrase provided. Continue without encryption?')) return;
+    }
+
+    // Simple client-side AES-GCM encryption stub using Web Crypto (demo only)
+    try {
+      const enc=new TextEncoder().encode(pass || 'demo-pass');
+      const keyMaterial=await crypto.subtle.importKey('raw', enc, 'PBKDF2', false, ['deriveKey']);
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+
+      const key=await crypto.subtle.deriveKey({
+        name:'PBKDF2', salt, iterations:250000, hash:'SHA-256'
+      }
+
+      , keyMaterial, {
+      name:'AES-GCM', length:256
+    }
+
+    , true, ['encrypt']);
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+
+  const cipher=await crypto.subtle.encrypt({
+    name:'AES-GCM', iv
+  }
+
+  , key, new TextEncoder().encode(out));
+
+const payload= {
+  salt: Array.from(salt), iv: Array.from(iv), data: Array.from(new Uint8Array(cipher))
+}
+
+;
+
+const blob=new Blob([JSON.stringify(payload)], {
+  type:'application/json'
+});
+const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='encrypted_payload.json'; a.click();
+log('Encrypted payload prepared for download (demo).');
+}
+
+catch(e) {
+  console.error(e); log('Encryption failed: ' + e.message);
+}
+});
+
+document.getElementById('clearBtn').addEventListener('click', ()=> {
+    document.getElementById('imgInput').value='';
+    document.getElementById('thumbs').innerHTML='';
+    document.getElementById('out').innerText='No output yet';
+    document.getElementById('mf-tenant').innerText='—';
+    document.getElementById('mf-address').innerText='—';
+    document.getElementById('mf-claim').innerText='—';
+    document.getElementById('mf-confidence').innerText='n/a';
+    document.getElementById('procStatus').innerText='idle';
+    log('Cleared UI and state');
+  });
+
+document.getElementById('downloadEnc').addEventListener('click', async ()=> {
+    const id=(JSON.parse(document.getElementById('out').innerText || '{}') || {}).id;
+
+    if( !id) {
+      alert('No encrypted id available'); return;
+    }
+
+    // request encrypted blob from server
+    try {
+      const resp=await fetch('/encrypted/' + id);
+      if( !resp.ok) throw new Error('Not found');
+      const data=await resp.json();
+
+      const blob=new Blob([JSON.stringify(data)], {
+        type:'application/json'
+      });
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='server_encrypted_' + id + '.json'; a.click();
+    log('Downloaded encrypted blob for id=' + id);
+  }
+
+  catch(e) {
+    log('Download failed: ' + e.message);
+  }
+});
+
+</script></body></html>< !doctype html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Image OCR Upload Demo</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"><style>:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --accent: #b80606;
+  --muted: #556072;
+  --success: #0b9a5a;
+  --warn: #e6a800;
+  --danger: #c62828;
+  --radius: 12px;
+  --shadow: 0 8px 30px rgba(11, 18, 30, .06);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+}
+
+* {
+  box-sizing: border-box
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #0b1220;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.wrapper {
+  max-width: 980px;
+  margin: 0 auto
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  overflow: hidden;
+}
+
+/* layout */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 18px
+}
+
+@media (max-width:880px) {
+  .grid {
+    grid-template-columns: 1fr
+  }
+}
+
+/* controls */
+.label {
+  display: block;
+  font-weight: 600;
+  margin: 8px 0;
+  color: #1f2937
+}
+
+.input,
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6eef8;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 14px;
+}
+
+.input:focus,
+input[type="file"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px rgba(184, 6, 6, 0.07)
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent) 0%, #910404 100%);
+}
+
+.button.secondary {
+  background: #334155
+}
+
+.button.ghost {
+  background: transparent;
+  border: 1px dashed #e6eef8;
+  color: var(--accent)
+}
+
+/* preview + mapped fields */
+.preview {
+  border: 1px dashed #e6eef8;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff, #fcfcff);
+  min-height: 140px;
+}
+
+.preview h4 {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #334155
+}
+
+.field {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f4f7fb
+}
+
+.field:last-child {
+  border-bottom: 0
+}
+
+.field .k {
+  color: #334155;
+  font-weight: 700
+}
+
+.field .v {
+  color: #0b1220;
+  max-width: 70%;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap
+}
+
+/* thumbnails */
+.thumb-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px
+}
+
+.thumb {
+  width: 84px;
+  height: 84px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e8eef8;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center
+}
+
+.thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover
+}
+
+/* output & log */
+.out,
+.log {
+  background: #0b12201a;
+  color: #0b1220;
+  padding: 10px;
+  border-radius: 10px;
+  font-family: var(--mono);
+  max-height: 160px;
+  overflow: auto;
+  border: 1px solid #eef2f7
+}
+
+.note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px
+}
+
+.small {
+  font-size: 13px;
+  color: var(--muted)
+}
+
+/* utility */
+.center {
+  text-align: center
+}
+
+.hidden {
+  display: none
+}
+
+</style></head><body><div class="wrapper"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="margin:0;color:var(--accent);font-size:18px">Image OCR Upload Demo</h2><div class="small">Source: Google Lens / Camera</div></div><div class="grid"><main><label class="label">Upload image (Google Lens / Camera)</label><input id="imgInput" class="input" type="file" accept="image/*" /><div id="thumbs" class="thumb-grid" aria-hidden="true"></div><label class="label" style="margin-top:12px">Encryption passphrase (optional)</label><input id="passphrase" class="input" type="password" placeholder="Type a passphrase to encrypt results locally" /><div class="row" style="margin-top:12px"><button id="uploadBtn" class="button">Upload & Process</button><button id="encryptBtn" class="button secondary">Encrypt Locally</button><button id="clearBtn" class="button ghost">Clear</button></div><div class="note">This demo sends a Base64 image to /process-image and shows mapped results and encrypted download options.</div><div style="margin-top:12px"><label class="label">Raw response</label><pre id="out" class="out">No output yet</pre></div></main><aside><div class="preview" id="preview"><h4>Mapped Fields</h4><div class="field"><div class="k">Tenant</div><div class="v" id="mf-tenant">—</div></div><div class="field"><div class="k">Property</div><div class="v" id="mf-address">—</div></div><div class="field"><div class="k">Claim</div><div class="v" id="mf-claim">—</div></div><div style="margin-top:10px" class="small">Confidence: <span id="mf-confidence">n/a</span></div></div><div style="margin-top:12px" class="log" id="log">No activity yet</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><div class="small">Status: <strong id="procStatus">idle</strong></div><div><button id="downloadEnc" class="button ghost">Download Encrypted</button></div></div></aside></div></div></div><script>
+
+/* Minimal client upload logic with improved UX and optional client-side encryption */
+async function toBase64(file) {
+  return await new Promise(r=> {
+      const fr=new FileReader(); fr.onload=()=>r(fr.result.split(',')[1]); fr.readAsDataURL(file);
+    });
+}
+
+function log(msg) {
+  const el=document.getElementById('log');
+  const ts=new Date().toLocaleTimeString();
+
+  el.innerText=`[$ {
+    ts
+  }
+
+  ] $ {
+    msg
+  }
+
+  \n`+el.innerText;
+}
+
+function showThumb(file) {
+  const thumbs=document.getElementById('thumbs');
+  thumbs.innerHTML='';
+  const url=URL.createObjectURL(file);
+  const d=document.createElement('div');
+  d.className='thumb';
+  const img=document.createElement('img');
+  img.src=url;
+  d.appendChild(img);
+  thumbs.appendChild(d);
+  thumbs.setAttribute('aria-hidden', 'false');
+}
+
+document.getElementById('imgInput').addEventListener('change', (e)=> {
+    const f=e.target.files && e.target.files[0];
+
+    if(f) {
+      showThumb(f); log('Image selected: ' + f.name);
+    }
+  });
+
+document.getElementById('uploadBtn').addEventListener('click', async ()=> {
+    const f=document.getElementById('imgInput').files[0];
+
+    if( !f) {
+      alert('Select an image'); return;
+    }
+
+    document.getElementById('procStatus').innerText='processing';
+    log('Starting upload for ' + f.name);
+
+    try {
+      const b64=await toBase64(f);
+
+      const resp=await fetch('/process-image', {
+
+        method:'POST',
+        headers: {
+          'Content-Type':'application/json'
+        }
+
+        ,
+        body: JSON.stringify({
+          filename: f.name, imageBase64: b64, userMeta: {
+            source: 'google-lens'
+          }
+        })
+    });
+  if( !resp.ok) throw new Error('Server returned ' + resp.status);
+  const data=await resp.json();
+  document.getElementById('out').innerText=JSON.stringify(data, null, 2);
+
+  if(data && data.mappedForm) {
+    document.getElementById('mf-tenant').innerText=data.mappedForm.tenantName || '—';
+    document.getElementById('mf-address').innerText=data.mappedForm.propertyAddress || '—';
+    document.getElementById('mf-claim').innerText=data.mappedForm.claimAmount || '—';
+    document.getElementById('mf-confidence').innerText=(data.mappedForm.confidence || 'unknown');
+  }
+
+  log('Processing completed, id=' + (data && data.id ? data.id : 'n/a'));
+  document.getElementById('procStatus').innerText='done';
+}
+
+catch(err) {
+  console.error(err);
+  log('Upload failed: ' + (err.message||err));
+  document.getElementById('procStatus').innerText='error';
+}
+});
+
+document.getElementById('encryptBtn').addEventListener('click', async ()=> {
+    const outText=document.getElementById('out').innerText;
+
+    if( !outText || outText==='No output yet') {
+      alert('No data to encrypt'); return;
+    }
+
+    const pass=document.getElementById('passphrase').value;
+
+    if( !pass) {
+      if( !confirm('No passphrase provided. Continue without encryption?')) return;
+    }
+
+    try {
+      const enc=new TextEncoder().encode(pass || 'demo-pass');
+      const keyMaterial=await crypto.subtle.importKey('raw', enc, 'PBKDF2', false, ['deriveKey']);
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+
+      const key=await crypto.subtle.deriveKey({
+        name:'PBKDF2', salt, iterations:250000, hash:'SHA-256'
+      }
+
+      , keyMaterial, {
+      name:'AES-GCM', length:256
+    }
+
+    , true, ['encrypt']);
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+
+  const cipher=await crypto.subtle.encrypt({
+    name:'AES-GCM', iv
+  }
+
+  , key, new TextEncoder().encode(outText));
+
+const payload= {
+  salt: Array.from(salt), iv: Array.from(iv), data: Array.from(new Uint8Array(cipher))
+}
+
+;
+
+const blob=new Blob([JSON.stringify(payload)], {
+  type:'application/json'
+});
+const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='encrypted_payload.json'; a.click();
+log('Encrypted payload prepared for download (demo).');
+}
+
+catch(e) {
+  console.error(e); log('Encryption failed: ' + e.message);
+}
+});
+
+document.getElementById('clearBtn').addEventListener('click', ()=> {
+    document.getElementById('imgInput').value='';
+    document.getElementById('thumbs').innerHTML='';
+    document.getElementById('out').innerText='No output yet';
+    document.getElementById('mf-tenant').innerText='—';
+    document.getElementById('mf-address').innerText='—';
+    document.getElementById('mf-claim').innerText='—';
+    document.getElementById('mf-confidence').innerText='n/a';
+    document.getElementById('procStatus').innerText='idle';
+    log('Cleared UI and state');
+  });
+
+document.getElementById('downloadEnc').addEventListener('click', async ()=> {
+    let id;
+
+    try {
+      id=(JSON.parse(document.getElementById('out').innerText || '{}') || {}).id;
+    }
+
+    catch(e) {
+      id=null;
+    }
+
+    if( !id) {
+      alert('No encrypted id available'); return;
+    }
+
+    try {
+      const resp=await fetch('/encrypted/' + id);
+      if( !resp.ok) throw new Error('Not found');
+      const data=await resp.json();
+
+      const blob=new Blob([JSON.stringify(data)], {
+        type:'application/json'
+      });
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='server_encrypted_' + id + '.json'; a.click();
+    log('Downloaded encrypted blob for id=' + id);
+  }
+
+  catch(e) {
+    log('Download failed: ' + e.message);
+  }
+});
+
+</script></body></html>< !doctype html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Stripe SSA Demo</title><style>:root {
+  --bg: #f6f7fb;
+  --card: #fff;
+  --accent: #b80606;
+  --muted: #64748b
+}
+
+body {
+  font-family: Inter, system-ui, Arial;
+  background: var(--bg);
+  margin: 0;
+  color: #0b1220;
+  padding: 28px
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto
+}
+
+.card {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(11, 18, 30, .06)
+}
+
+h3 {
+  color: var(--accent);
+  margin: 0 0 12px 0
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center
+}
+
+label {
+  font-weight: 600;
+  margin-right: 8px
+}
+
+.input,
+select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e6eef8
+}
+
+.button {
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 0;
+  cursor: pointer
+}
+
+.small {
+  font-size: 13px;
+  color: var(--muted)
+}
+
+.log {
+  background: #0b12201a;
+  padding: 10px;
+  border-radius: 8px;
+  font-family: monospace;
+  max-height: 140px;
+  overflow: auto;
+  border: 1px solid #eef2f7
+}
+
+.preview {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px dashed #e6eef8;
+  background: #fcfcff
+}
+
+</style></head><body><div class="container"><div class="card"><h3>Stripe Checkout+SSA Acceptance Demo</h3><div class="row" style="margin-bottom:8px"><label>Flat Rate</label><div style="font-weight:700">$10,
+000</div></div><div style="margin-bottom:12px"><input id="acceptSSA" type="checkbox" /><label for="acceptSSA" class="small">I accept Stripe Services Agreement — <a href="https://stripe.com/legal/ssa" target="_blank">View SSA</a></label></div><div class="row"><button id="checkoutBtn" class="button">Pay $10,
+000 via Stripe Checkout</button><button id="testCreate" class="button" style="background:#2546a8">Create Checkout Session (curl)</button><div style="margin-left:auto" class="small">Use Stripe CLI to forward webhooks to local server</div></div><div class="preview" id="preview"><div><strong>Instructions</strong></div><ol><li class="small">Start your webhook-enabled server (see server example) at port 4242.</li><li class="small">Expose Stripe webhooks locally using Stripe CLI: <code>stripe listen --forward-to localhost:4242/webhook</code></li><li class="small">Serve this file via local static server: <code>npx http-server . -p 5500</code>then open <code>http: //localhost:5500/stripe_ssa_demo.html</code></li>
+<li class="small">Click the Checkout button after accepting SSA;
+the demo will simulate a call to <code>/create-checkout-session</code>.</li></ol></div><div style="margin-top:12px"><div class="small">Developer notes: Replace the client stub key with your publishable key and implement server endpoint <code>/create-checkout-session</code>to call Stripe using your secret key. Record SSA acceptance server-side with timestamp and user metadata before creating a session.</div></div><div style="margin-top:12px"><div><strong>Demo log</strong></div><div id="log" class="log">Ready.</div></div></div></div><script> // Replace with your publishable key for real tests
+const STRIPE_PUBLISHABLE_KEY='pk_test_REPLACE_ME';
+
+function log(msg) {
+  const el=document.getElementById('log');
+
+  el.innerText=`[$ {
+    new Date().toLocaleTimeString()
+  }
+
+  ] $ {
+    msg
+  }
+
+  \n`+el.innerText;
+}
+
+document.getElementById('checkoutBtn').addEventListener('click', async ()=> {
+    const accepted=document.getElementById('acceptSSA').checked;
+
+    if( !accepted) {
+      alert('You must accept the Stripe Services Agreement to proceed.'); return;
+    }
+
+    log('Requesting /create-checkout-session (demo).');
+
+    try {
+
+      // Demo stub: call server endpoint that must create a Checkout Session and return sessionId
+      const resp=await fetch('/create-checkout-session', {
+
+        method: 'POST',
+        headers: {
+          'Content-Type':'application/json'
+        }
+
+        ,
+        body: JSON.stringify({
+          amount: 1000000, currency: 'usd', ssAccepted: true, userMeta: {
+            source: 'demo-ui'
+          }
+        })
+    });
+  if( !resp.ok) throw new Error('Server returned ' + resp.status);
+  const data=await resp.json();
+  log('Server returned sessionId: ' + (data.sessionId || data.session_id || 'n/a'));
+
+  if(data.checkoutUrl) {
+    log('Opening Checkout URL (server-provided).');
+    window.open(data.checkoutUrl, '_blank');
+  }
+
+  else {
+    log('No checkoutUrl in response; use Stripe redirect on client with sessionId if provided.');
+  }
+}
+
+catch(err) {
+  console.error(err);
+  log('Failed to create session: ' + (err.message || err));
+  alert('Demo: check server logs and Stripe CLI forwarding.');
+}
+});
+
+// Quick curl helper (opens instruction in new window)
+document.getElementById('testCreate').addEventListener('click', ()=> {
+    const curl=`curl -X POST http: //localhost:4242/create-checkout-session -H "Content-Type: application/json" -d '{"amount":1000000,"currency":"usd","ssAccepted":true,"userMeta":{"userId":"demo"}}'`;
+    alert('Run this in your terminal:\n\n' + curl);
+  });
+
+</script></body></html>< !doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stripe SSA Demo</title></head><body><h3>Stripe SSA Demo (front-end)</h3><input id="acceptSSA" type="checkbox" />I accept Stripe Services Agreement<br><br><button id="checkoutBtn">Create Checkout Session</button><pre id="log">ready</pre><script>function log(m) {
+  document.getElementById('log').innerText=new Date().toLocaleTimeString()+' — '+m;
+}
+
+document.getElementById('checkoutBtn').addEventListener('click', async ()=> {
+    if( !document.getElementById('acceptSSA').checked) {
+      alert('Accept SSA first'); return;
+    }
+
+    log('Calling /create-checkout-session (server must implement) — demo uses /process-image server for OCR example');
+
+    try {
+      const resp=await fetch('/create-checkout-session', {
+        method:'POST', headers: {
+          'Content-Type':'application/json'
+        }
+
+        , body: JSON.stringify({
+          amount:1000000, currency:'usd', ssAccepted:true, userMeta: {
+            userId:'demo'
+          }
+        })
+    });
+  log('Response status: ' + resp.status);
+  const data=await resp.json();
+  log('Response body: ' + JSON.stringify(data));
+}
+
+catch(e) {
+  log('Error: ' + e.message);
+}
+});
+</script></body></html>require('dotenv').config();
+const express=require('express');
+const bodyParser=require('body-parser');
+const vision=require('@google-cloud/vision');
+const crypto=require('crypto');
+
+const {
+  v4: uuidv4
+}
+
+=require('uuid');
+
+const client=new vision.ImageAnnotatorClient(); // ensure GOOGLE_APPLICATION_CREDENTIALS env set
+const app=express();
+
+app.use(bodyParser.json({
+    limit:'10mb'
+  }));
+
+/* Simple in-memory store for demo */
+const store= {}
+
+;
+
+/* Helper: basic AES-GCM encryption (use KMS in production) */
+function encryptAesGcmJson(plaintextObj, passphrase) {
+  const iv=crypto.randomBytes(12);
+  const salt=crypto.randomBytes(16);
+  const key=crypto.pbkdf2Sync(passphrase, salt, 250000, 32, 'sha256');
+  const cipher=crypto.createCipheriv('aes-256-gcm', key, iv);
+  const json=Buffer.from(JSON.stringify(plaintextObj), 'utf8');
+  const encrypted=Buffer.concat([cipher.update(json), cipher.final()]);
+  const tag=cipher.getAuthTag();
+
+  return {
+    salt: salt.toString('base64'), iv: iv.toString('base64'), tag: tag.toString('base64'), data: encrypted.toString('base64')
+  }
+
+  ;
+}
+
+/* AI mapping stub: map OCR text to eviction form fields */
+function aiMapOcrToForm(ocrText) {
+  const form= {}
+
+  ;
+  const lines=ocrText.split('\n').map(l=>l.trim()).filter(Boolean);
+
+  for(const line of lines) {
+    if(line.match(/^\d {
+          1, 5
+        }
+
+        \s+\w+/)) form.propertyAddress=line;
+    if(line.toLowerCase().includes('tenant') || line.match(/[A-Z][a-z]+\s[A-Z][a-z]+/)) form.tenantName=form.tenantName || line;
+    if(line.match(/\$\s?\d+/)) form.claimAmount=line.match(/\$\s?[\d, ]+/)[0];
+  }
+
+  form.tenantName=form.tenantName || 'Unknown Tenant';
+  form.propertyAddress=form.propertyAddress || 'Unknown Address';
+  form.claimAmount=form.claimAmount || '$10,000';
+  return form;
+}
+
+/* POST /process-image
+   Body: { filename, imageBase64, userMeta }
+   Returns: { id, ocrText, mappedForm, encryptedBlobId (if stored) }
+*/
+app.post('/process-image', async (req, res)=> {
+    try {
+      const {
+        filename, imageBase64, userMeta
+      }
+
+      =req.body;
+
+      if( !imageBase64) return res.status(400).json({
+        error: 'no image'
+      });
+
+    // 1) OCR using Google Vision
+    const imageBuffer=Buffer.from(imageBase64, 'base64');
+
+    const [result]=await client.textDetection({
+      image: {
+        content: imageBuffer
+      }
+    });
+  const ocrText=(result.fullTextAnnotation && result.fullTextAnnotation.text) || '';
+
+  // 2) AI map OCR -> structured court form
+  const mapped=aiMapOcrToForm(ocrText);
+
+  // 3) Create audit record and optionally encrypt before storage
+  const id=uuidv4();
+
+  const audit= {
+    id, filename, userMeta, processedAt: new Date().toISOString(), ocrSnippet: ocrText.slice(0, 200)
+  }
+
+  ;
+  const serverPass=process.env.SERVER_ENC_PASSPHRASE || 'demo-server-pass';
+
+  const enc=encryptAesGcmJson({
+    mapped, audit
+  }
+
+  , serverPass);
+
+// Persist encrypted blob (demo in-memory)
+store[id]= {
+  audit, mapped, encrypted: enc
+}
+
+;
+
+// 4) Return structured data (minimal) and id reference
+return res.json({
+  id, mappedForm: mapped, encryptedBlobId: id, audit: {
+    id: audit.id, processedAt: audit.processedAt
+  }
+});
+}
+
+catch (err) {
+  console.error(err);
+
+  return res.status(500).json({
+    error: 'processing failed'
+  });
+}
+});
+
+app.get('/encrypted/:id', (req, res)=> {
+    const rec=store[req.params.id];
+
+    if( !rec) return res.status(404).json({
+      error: 'not found'
+    });
+
+  res.json({
+    id: req.params.id, encrypted: rec.encrypted, audit: rec.audit
+  });
+});
+
+const PORT=process.env.PORT || 3000;
+
+app.listen(PORT, ()=>console.log(`server listening on $ {
+      PORT
+    }
+
+    `));
+
+
+PORT=4242 BASE_URL=http: //localhost:4242
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/google-credentials.json SERVER_ENC_PASSPHRASE=demo-server-pass
+/* Place your CSS styles in this file */
+
+h1 {
+  text-align: center;
+  font-family: "Source Sans Pro", sans-serif;
+  font-weight: normal;
+}
+
+:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --accent: #b80606;
+  --muted: #556072;
+  --success: #0b9a5a;
+  --warn: #e6a800;
+  --danger: #c62828;
+  --glass: rgba(255, 255, 255, 0.8);
+  --radius: 12px;
+  --shadow: 0 8px 30px rgba(11, 18, 30, .06);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+}
+
+/* Page layout */
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #0b1220;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1080px;
+  margin: 32px auto;
+  padding: 20px;
+}
+
+/* Card */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  overflow: hidden;
+}
+
+/* Heading */
+.h3 {
+  font-size: 1.25rem;
+  color: var(--accent);
+  margin: 0 0 12px 0;
+  font-weight: 700;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 16px;
+}
+
+@media (max-width:980px) {
+  .grid {
+    grid-template-columns: 1fr;
+    padding: 0
+  }
+}
+
+/* Form inputs */
+.label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1f2937
+}
+
+.input,
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6eef8;
+  border-radius: 10px;
+  background: transparent;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+.input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 4px 18px rgba(184, 6, 6, 0.08);
+}
+
+/* Buttons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent) 0%, #910404 100%);
+}
+
+.button.secondary {
+  background: #2d3748;
+}
+
+.button.ghost {
+  background: transparent;
+  color: var(--accent);
+  border: 1px dashed #f0dede;
+}
+
+/* Small helpers */
+.note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: #0b12201a;
+  padding: 8px;
+  border-radius: 8px
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px
+}
+
+/* Preview / mapped form card */
+.preview {
+  border: 1px dashed #e6eef8;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff, #fcfcff);
+  min-height: 120px;
+}
+
+.preview h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px
+}
+
+.field {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f4f7fb
+}
+
+.field:last-child {
+  border-bottom: 0
+}
+
+.field .k {
+  color: #334155;
+  font-weight: 700
+}
+
+.field .v {
+  color: #0b1220;
+  max-width: 70%;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap
+}
+
+/* Status badges */
+.badge {
+  display: inline-block;
+  padding: 6px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff
+}
+
+.badge.ok {
+  background: var(--success)
+}
+
+.badge.pending {
+  background: var(--warn);
+  color: #2b2b00
+}
+
+.badge.halted {
+  background: var(--danger)
+}
+
+/* Log area */
+.log {
+  background: #0b12201a;
+  color: #0b1220;
+  padding: 10px;
+  border-radius: 10px;
+  font-family: var(--mono);
+  max-height: 160px;
+  overflow: auto;
+  border: 1px solid #eef2f7;
+}
+
+/* File preview thumbnails */
+.thumb-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap
+}
+
+.thumb {
+  width: 86px;
+  height: 86px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e8eef8;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover
+}
+
+/* Footer small actions */
+.footer-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  justify-content: space-between
+}
+
+.small {
+  font-size: 13px;
+  color: var(--muted)
+}
+
+/* Utility classes */
+.hidden {
+  display: none
+}
+
+.center {
+  text-align: center
+}
+
+<div class="container"><div class="card"><div class="h3">Image OCR & AI Mapping</div><div class="grid"><div><label class="label">Upload image (Google Lens / Camera)</label><input id="imgInput" class="input" type="file" accept="image/*" /><div class="thumb-grid" id="thumbs"></div><label class="label">Encryption passphrase (optional)</label><input id="passphrase" class="input" type="password" /><div class="row" style="margin-top:12px"><button id="processBtn" class="button">Process Image</button><button id="encryptBtn" class="button secondary">Encrypt & Store</button></div><div class="note">Server will run OCR → AI mapping → encrypt and return mapped form. Consent and SSA acceptance must be recorded server-side.</div></div><aside><div class="preview" id="preview"><h4>Mapped Fields</h4><div class="field"><div class="k">Tenant</div><div class="v" id="mf-tenant">—</div></div><div class="field"><div class="k">Property</div><div class="v" id="mf-address">—</div></div><div class="field"><div class="k">Claim</div><div class="v" id="mf-claim">—</div></div></div><div style="margin-top:12px" class="log" id="log">No activity yet</div><div class="footer-actions"><div class="small">Status: <span class="badge pending" id="procStatus">Pending</span></div><div><button id="downloadEnc" class="button ghost">Download Encrypted</button></div></div></aside></div></div></div>< !DOCTYPE html><html><head><title>Footnote Click Counter</title></head><body><p>This is some text with a <a href="#" id="footnote">footnote</a>.</p><p>Clicks on the footnote: <span id="count">0</span></p><script>let count=0;
+const footnote=document.getElementById('footnote');
+const countDisplay=document.getElementById('count');
+
+footnote.addEventListener('click', function() {
+    count++;
+    countDisplay.textContent=count;
+  });
+
+</script></body></html>function getRandomColor() {
+  var letters='0123456789ABCDEF';
+  var color='#';
+
+  for (var i=0; i < 6; i++) {
+    color+=letters[Math.floor(Math.random() * 16)];
+  }
+
+  return color;
+}
+
+// Example of how to use the function
+var randomColor=getRandomColor();
+console.log(randomColor);
